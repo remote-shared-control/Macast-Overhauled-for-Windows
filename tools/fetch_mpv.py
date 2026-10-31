@@ -2,7 +2,9 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import urllib.request
 
@@ -18,7 +20,6 @@ def fetch():
     if not archive.exists():
         print('Downloading ' + ASSET, flush=True)
         with urllib.request.urlopen(URL, timeout=120) as response, archive.open('wb') as output:
-            import shutil
             shutil.copyfileobj(response, output)
     with archive.open('rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
@@ -26,8 +27,20 @@ def fetch():
         raise RuntimeError('MPV checksum mismatch. Remove the downloaded archive and retry.')
     target = ROOT / 'bin'
     target.mkdir(exist_ok=True)
-    # Windows 10/11 include bsdtar; this archive contains no install step.
-    subprocess.run(['tar', '-xf', str(archive), '-C', str(target)], check=True)
+    # Older Windows/Server bsdtar builds lack the LZMA codec. GitHub's
+    # Windows runners provide 7-Zip; recent Windows 11 tar also works.
+    seven_zip = shutil.which('7z') or shutil.which('7zz')
+    if not seven_zip:
+        candidate = Path(os.environ.get('ProgramFiles', r'C:\Program Files')) / '7-Zip/7z.exe'
+        if candidate.is_file():
+            seven_zip = str(candidate)
+    if seven_zip:
+        subprocess.run([seven_zip, 'x', '-y', '-o' + str(target), str(archive)], check=True)
+    else:
+        try:
+            subprocess.run(['tar', '-xf', str(archive), '-C', str(target)], check=True)
+        except (OSError, subprocess.CalledProcessError) as error:
+            raise RuntimeError('This tar build cannot extract the MPV archive. Install 7-Zip and retry.') from error
     (target / 'MPV-SOURCE.json').write_text(json.dumps({
         'asset': ASSET, 'url': URL, 'sha256': SHA256, 'release': '20261021',
         'mpv_commit': 'e471496c56', 'ffmpeg_commit': '9a861e968',

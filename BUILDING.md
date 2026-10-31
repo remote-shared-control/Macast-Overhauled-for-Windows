@@ -12,7 +12,7 @@ py -3.12 -m venv .venv
 也可运行 `powershell -ExecutionPolicy Bypass -File tools/build_windows.ps1`，该选项只影响本次脚本进程。
 Windows 构建使用本指南中的脚本和 `Macast-Windows.spec`；macOS 打包脚本不在本仓库的 Windows 发布内容中。
 
-`fetch_mpv.py` 固定使用 shinchiro 的 baseline x64 `20261021 / e471496c56` 构建，并验证下载 SHA256；不会选择要求较新 CPU 指令集的 v3/v4 包。下载包中的安装器和更新器不执行、不打包。Windows 10/11 使用系统 D3DCompiler_47，不打包旧版 _43 DLL。
+`fetch_mpv.py` 固定使用 shinchiro 的 baseline x64 `20261021 / e471496c56` 构建，并验证下载 SHA256；不会选择要求较新 CPU 指令集的 v3/v4 包。解压优先使用 7-Zip（GitHub Windows runner 已安装），也可使用支持 LZMA 的新版 Windows `tar`；旧版 `tar` 若提示不支持 LZMA，请安装 7-Zip 后重试。7-Zip 仅是构建工具，便携程序运行不需要它。下载包中的安装器和更新器不执行、不打包。Windows 10/11 使用系统 D3DCompiler_47，不打包旧版 _43 DLL。
 
 如果已有自备的 MPV 目录，可运行 `python tools/build_windows.py --mpv-dir C:/path/to/mpv`。该目录需要 `mpv.exe` 和可复核的许可/来源资料；推荐使用脚本固定的单体构建。自行替换 MPV 后需重新完成全部验收。
 
