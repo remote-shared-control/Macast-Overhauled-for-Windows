@@ -28,7 +28,7 @@
 
 ### 安装步骤
 
-1. 从 [Releases 下载 **Macast-Overhauled-Windows-v0.8.1-x64.zip**](https://github.com/remote-shared-control/Macast-Overhauled-for-Windows/releases/latest/download/Macast-Overhauled-Windows-v0.8.1-x64.zip)。
+1. 从 [Releases 下载 **Macast-Overhauled-Windows-v0.8.2-x64.zip**](https://github.com/remote-shared-control/Macast-Overhauled-for-Windows/releases/latest/download/Macast-Overhauled-Windows-v0.8.2-x64.zip)。
 2. 将 ZIP 中的**整个文件夹**解压到电脑上的固定位置。
 3. 双击 **Macast.exe**，任务栏通知区域出现图标即表示应用已启动。
 4. 首次使用时，如 Windows 防火墙询问，请允许 Macast 在自己的专用网络中接收连接。
@@ -131,7 +131,7 @@ Windows 版只使用内置 MPV，不附带 PotPlayer 或其他外部播放器集
 
 ## 从源码构建
 
-参阅 [BUILDING.md](BUILDING.md)。保留 `Macast-plugins/` 插件目录，在 Windows x64 上使用 Python 3.12 构建。便携包中附有双语说明、许可证及 `Documentation/Macast-Windows-Source-v0.8.1.zip` 修改源码快照。
+参阅 [BUILDING.md](BUILDING.md)。保留 `Macast-plugins/` 插件目录，在 Windows x64 上使用 Python 3.12 构建。便携包中附有双语说明、许可证及 `Documentation/Macast-Windows-Source-v0.8.2.zip` 修改源码快照。
 
 采用目录式便携打包，避免每次启动自解压；媒体缓存上限为前向 32 MiB、后向 8 MiB，不读取用户独立 MPV 的全局配置。诊断和测试范围见 [VALIDATION.md](VALIDATION.md)。
 

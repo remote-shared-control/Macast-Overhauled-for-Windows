@@ -12,7 +12,7 @@
     }
   },
   "windows_port": {
-    "version": "0.8.1",
+    "version": "0.8.2",
     "basis": "Local Macast-Overhauled-main macOS fork, retaining original Macast and ModernZ provenance",
     "mpv": "20261021 / e471496c56 (baseline x64)"
   }

@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import urllib.request
+from fetch_vulkan import fetch_vulkan
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSET = 'mpv-x86_64-20261021-git-e471496c56.7z'
@@ -47,6 +48,7 @@ def fetch():
         'source': 'https://github.com/shinchiro/mpv-winbuild-cmake',
     }, indent=2) + '\n', encoding='utf-8')
     print('Verified and extracted ' + ASSET)
+    fetch_vulkan()
 
 
 if __name__ == '__main__':

@@ -28,7 +28,7 @@ This derivative is maintained independently. The Windows program is still named 
 
 ### Steps
 
-1. Download [**Macast-Overhauled-Windows-v0.8.1-x64.zip**](https://github.com/remote-shared-control/Macast-Overhauled-for-Windows/releases/latest/download/Macast-Overhauled-Windows-v0.8.1-x64.zip) from Releases.
+1. Download [**Macast-Overhauled-Windows-v0.8.2-x64.zip**](https://github.com/remote-shared-control/Macast-Overhauled-for-Windows/releases/latest/download/Macast-Overhauled-Windows-v0.8.2-x64.zip) from Releases.
 2. Extract the **entire folder** from the ZIP to a fixed location on your PC.
 3. Open **Macast.exe**. Its icon appears in the system tray.
 4. If Windows Firewall prompts, allow Macast to receive connections on your own private network.
@@ -131,7 +131,7 @@ When reporting a problem, include the Windows version, CPU / GPU, selected proto
 
 ## Build from source
 
-See [BUILDING.md](BUILDING.md). Keep the included `Macast-plugins/` directory and build on Windows x64 with Python 3.12. The portable package includes bilingual documentation, license records, and a `Documentation/Macast-Windows-Source-v0.8.1.zip` snapshot of the modified application and plugins.
+See [BUILDING.md](BUILDING.md). Keep the included `Macast-plugins/` directory and build on Windows x64 with Python 3.12. The portable package includes bilingual documentation, license records, and a `Documentation/Macast-Windows-Source-v0.8.2.zip` snapshot of the modified application and plugins.
 
 The folder-based build avoids per-launch extraction. Forward and backward media caches are capped at 32 MiB and 8 MiB. The player's global user configuration is not loaded. See [VALIDATION.md](VALIDATION.md) for diagnostic commands and validation scope.
 

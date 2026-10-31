@@ -1,4 +1,7 @@
-# Windows 0.8.1
+# Windows 0.8.2
+
+- 补齐 MPV 静态导入的官方 Vulkan loader，使没有预装 Vulkan runtime 的电脑也能启动；视频输出仍为 D3D11。
+- 构建脚本支持旧版 Windows tar 不具备 LZMA codec 的情况，优先使用 7-Zip。
 
 - 从本地 Macast-Overhauled macOS 源码移植，保留 NVA 0.39 协议修补、DASH 音轨与质量切换、ModernZ 蓝色主题、独立弹幕和 DPI 缩放。
 - 内置 MPV 是唯一随包播放器，只附带 NVA 协议插件；标准 DLNA 内置。

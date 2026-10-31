@@ -17,7 +17,7 @@ Windows 构建使用本指南中的脚本和 `Macast-Windows.spec`；macOS 打�
 如果已有自备的 MPV 目录，可运行 `python tools/build_windows.py --mpv-dir C:/path/to/mpv`。该目录需要 `mpv.exe` 和可复核的许可/来源资料；推荐使用脚本固定的单体构建。自行替换 MPV 后需重新完成全部验收。
 
 构建依次：生成仅含 NVA 的离线插件 → 回归测试 → PyInstaller one-folder → 打包后真实 IPC/ModernZ 自检 → 收集文档、许可与应用源码快照 → ZIP 与 SHA256。
-产物：`dist/Macast-Overhauled-Windows/Macast.exe` 和 `dist/Macast-Overhauled-Windows-v0.8.1-x64.zip`。
+产物：`dist/Macast-Overhauled-Windows/Macast.exe` 和 `dist/Macast-Overhauled-Windows-v0.8.2-x64.zip`。
 
 构建输出不启用 UPX，不执行管理员安装、系统 MPV 注册、开机启动修改或防火墙规则修改。首次运行的 Windows 网络访问询问由系统处理。
 
@@ -32,4 +32,6 @@ Windows 构建使用本指南中的脚本和 `Macast-Windows.spec`；macOS 打�
 
 GitHub Actions 配置为 `.github/workflows/build-windows.yml`，在 `windows-2022` 构建并上传产物，不自动发布 Release。仓库仅发布 Windows workflow；旧平台构建文件保留在本地参考目录，未加入 Windows 发布内容。
 
-当前便携包使用 CPython 3.12.14 x64 在独立 `.venv` 构建；开发者可使用标准 CPython 3.12 安装。完整应用修改源码随产物的 `Documentation/Macast-Windows-Source-v0.8.1.zip` 提供。
+当前便携包使用 CPython 3.12.14 x64 在独立 `.venv` 构建；开发者可使用标准 CPython 3.12 安装。完整应用修改源码随产物的 `Documentation/Macast-Windows-Source-v0.8.2.zip` 提供。
+
+`fetch_mpv.py` 同时下载并校验官方 LunarG runtime components ZIP，仅提取 x64 `vulkan-1.dll` 与原始许可，不运行安装器、SDK 或驱动。该 DLL 是当前 MPV 的静态导入依赖，即使采用 D3D11 输出也需要随包提供；可自备的 MPV 目录也需包含它。

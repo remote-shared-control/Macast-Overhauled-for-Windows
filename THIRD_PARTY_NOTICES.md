@@ -12,6 +12,7 @@ Macast-Overhauled for Windows derives from xfangfang/Macast (GPL-3.0) and the lo
 | Vue, Vue Resource, Element UI | Local settings page | licenses/frontend/ |
 | CPython | Frozen interpreter | Documentation/licenses/LICENSE.Python.txt |
 | CherryPy, cheroot, Requests, lxml, Pillow, pystray, pyperclip, psutil, appdirs and transitive Python dependencies | Runtime support | Documentation/licenses/python/ and PYTHON-PACKAGES.json |
+| Vulkan loader / Khronos, LunarG, Valve | Required MPV import dependency | licenses/vulkan/VulkanRT-License.txt and SOURCE.json; Apache-2.0/MIT |
 | MPV, FFmpeg, libplacebo and native dependencies | Playback | Documentation/licenses/mpv/ and MPV-SOURCE.json |
 | PyInstaller | Packaging bootloader | GPL with distribution exception; upstream project documentation |
 

@@ -45,7 +45,7 @@ def documentation(output, mpv):
     for name in ['README_ZH.md', 'README.md', 'BUILDING.md', 'RELEASE_NOTES.md',
                  'THIRD_PARTY_NOTICES.md', 'LICENSE', 'SOURCE-REVISIONS.json', 'VALIDATION.md']:
         shutil.copy2(ROOT / name, docs / name)
-    for section in ('frontend', 'icons', 'mpv'):
+    for section in ('frontend', 'icons', 'mpv', 'vulkan'):
         if (ROOT / 'licenses' / section).is_dir():
             shutil.copytree(ROOT / 'licenses' / section, docs / 'licenses' / section, dirs_exist_ok=True)
     shutil.copy2(ROOT / 'mpv_ui/LICENSE.ModernZ', docs / 'licenses/LICENSE.ModernZ')
@@ -111,8 +111,8 @@ def main():
     if sys.platform != 'win32' or platform.machine().lower() not in ('amd64', 'x86_64') or sys.version_info[:2] != (3, 12):
         raise SystemExit('Build with 64-bit CPython 3.12 on Windows 10/11.')
     mpv = args.mpv_dir.resolve()
-    if not (mpv / 'mpv.exe').is_file():
-        raise SystemExit('Run python tools/fetch_mpv.py first, or pass --mpv-dir.')
+    if not all((mpv / name).is_file() for name in ('mpv.exe', 'vulkan-1.dll')):
+        raise SystemExit('Run python tools/fetch_mpv.py first, or provide MPV and its Vulkan loader with --mpv-dir.')
     entries = prepare_plugins(ROOT / 'Macast-plugins', ROOT / 'bundled_plugins', 'win32', {'nirvana'})
     if len(entries) != 1:
         raise RuntimeError('Expected only the NVA protocol plugin')

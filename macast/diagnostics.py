@@ -14,7 +14,7 @@ from .utils import Setting
 def diagnose():
     root = resource_root()
     report = {'ok': False, 'resource_root': str(root), 'mpv': mpv_path()}
-    required = ['bin/mpv.exe', 'macast/.version', 'macast/xml/Description.xml',
+    required = ['bin/mpv.exe', 'bin/vulkan-1.dll', 'macast/.version', 'macast/xml/Description.xml',
                 'macast/assets/icon.ico', 'macast/assets/fonts/element-icons.woff',
                 'mpv_ui/scripts/modernz/main.lua', 'mpv_ui/modernz.conf',
                 'mpv_ui/fonts/modernz-icons.ttf', 'bundled_plugins/manifest.json']
