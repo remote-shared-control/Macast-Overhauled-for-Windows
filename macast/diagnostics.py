@@ -78,6 +78,7 @@ def diagnose():
         logger.removeHandler(capture)
         cherrypy.engine.unsubscribe('get_protocol', get_protocol)
     report['player_warnings'] = errors
+    report['player_exit_code'] = renderer.proc.returncode if renderer.proc is not None else None
     report['threads_stopped'] = not any(t and t.is_alive() for t in (renderer.mpv_thread, renderer.ipc_thread))
     report['ok'] = bool(report.get('ipc_connected') and report.get('modernz_loaded')
                         and report.get('danmaku_toggle_ok') and report['checksums_ok'] and report['threads_stopped']

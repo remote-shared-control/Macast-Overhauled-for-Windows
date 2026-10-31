@@ -120,9 +120,10 @@ def test_real_player_from_unicode_path(tmp_path):
     working = tmp_path / '中文 空格'
     working.mkdir()
     report = working / 'report.json'
-    subprocess.run([sys.executable, str(ROOT / 'Macast.py'), '--config-dir', str(working / 'config'),
-                    '--diagnose', str(report)], cwd=working, check=True, timeout=25)
+    result = subprocess.run([sys.executable, str(ROOT / 'Macast.py'), '--config-dir', str(working / 'config'),
+                             '--diagnose', str(report)], cwd=working, timeout=25)
     data = json.loads(report.read_text(encoding='utf-8'))
+    assert result.returncode == 0, data
     assert data['ok'], data
     assert data['application_version'] == (ROOT / 'macast/.version').read_text().strip()
     assert data['modernz_loaded'] and data['danmaku_toggle_ok'] and data['threads_stopped']
@@ -131,8 +132,9 @@ def test_real_player_from_unicode_path(tmp_path):
 @pytest.mark.skipif(not (ROOT / 'bin/mpv.exe').is_file(), reason='Pinned MPV not downloaded')
 def test_first_launch_tray_http_and_nva_shutdown(tmp_path):
     report = tmp_path / 'receiver.json'
-    subprocess.run([sys.executable, str(ROOT / 'Macast.py'), '--config-dir', str(tmp_path / 'fresh-config'),
-                    '--smoke-test', str(report)], cwd=ROOT, check=True, timeout=30)
+    result = subprocess.run([sys.executable, str(ROOT / 'Macast.py'), '--config-dir', str(tmp_path / 'fresh-config'),
+                             '--smoke-test', str(report)], cwd=ROOT, timeout=30)
     data = json.loads(report.read_text(encoding='utf-8'))
+    assert result.returncode == 0, data
     assert data['ok'], data
     assert data['nva_handshake'] and data['shutdown_clean']
