@@ -8,9 +8,11 @@ import sys
 import json
 import time
 import socket
-import random
+import secrets
+import re
 import subprocess
 import logging
+import platform
 import threading
 import cherrypy
 import gettext
@@ -19,6 +21,7 @@ from enum import Enum
 from macast.utils import Setting
 from macast.renderer import Renderer, RendererSetting
 from macast.gui import App, MenuItem
+from .ui import player_ui_options
 
 if os.name == 'nt':
     import _winapi
@@ -26,6 +29,7 @@ if os.name == 'nt':
 
 logger = logging.getLogger("MPVRenderer")
 logger.setLevel(logging.INFO)
+latency_logger = logging.getLogger('MacastLatency')
 
 
 class ObserveProperty(Enum):
@@ -37,6 +41,8 @@ class ObserveProperty(Enum):
     track_list = 6
     speed = 7
     sub = 8
+    mpv_version = 9
+    danmaku = 10
 
 
 class MPVRenderer(Renderer):
@@ -53,12 +59,14 @@ class MPVRenderer(Renderer):
         super(MPVRenderer, self).__init__(lang)
         global _
         _ = lang
-        mpv_rand = random.randint(0, 9999)
+        mpv_rand = secrets.token_hex(8)
         if os.name == 'nt':
-            self.mpv_sock = Setting.get_base_path(r"\\.\pipe\macast_mpvsocket{}".format(mpv_rand))
+            self.mpv_sock = r"\\.\pipe\macast_overhauled_{}".format(mpv_rand)
         else:
             self.mpv_sock = '/tmp/macast_mpvsocket{}'.format(mpv_rand)
         self.path = path
+        self.mpv_version = (0, 0)
+        self.media_options = {}
         self.proc = None
         self.title = Setting.get_friendly_name()
         self.mpv_thread = None
@@ -73,10 +81,32 @@ class MPVRenderer(Renderer):
         # in the starting parameters of MPV, and there is no need to wait for
         # one second to restart MPV.
         self.command_lock = threading.Lock()
+        self._stop_event = threading.Event()
+        self._load_started = None
+        self._switching_media = False
+        self._file_loaded = False
+        self.danmaku_file = None
+        self.separate_danmaku = type(self).start is MPVRenderer.start
         self.renderer_setting = MPVRendererSetting()
 
     def set_media_stop(self):
+        self._switching_media = False
+        self._file_loaded = False
+        self.danmaku_file = None
+        self.send_command(['set_property', 'force-window', 'no'])
         self.send_command(['stop'])
+
+    def prepare_media_switch(self):
+        """Clear the old frame without closing/reopening the video window."""
+        self._switching_media = True
+        self.pause = False
+        self.send_command(['set_property', 'force-window', 'yes'])
+        self.send_command(['stop'])
+        self.send_command(['set_property', 'pause', False])
+        self._file_loaded = False
+        self.danmaku_file = None
+        self.set_media_title('Loading new video…')
+        self.set_media_text('Loading new video…', 1500)
 
     def set_media_pause(self):
         self.send_command(['set_property', 'pause', True])
@@ -101,13 +131,29 @@ class MPVRenderer(Renderer):
     def set_media_url(self, url, start="0"):
         """ data : string
         """
-        options = {'start': start}
+        self.set_media_url_options(url, start)
+
+    def set_media_url_options(self, url, start="0", options=None):
+        """Load a file with options scoped to this playback, including DASH audio."""
+        options = dict(options or {})
+        self._file_loaded = False
+        self.danmaku_file = None
+        if self.separate_danmaku:
+            options.setdefault('secondary-sid', 'no')
+        options.setdefault('pause', 'no')
+        self.pause = str(options['pause']).lower() in ('yes', 'true', '1')
+        self.media_options = options.copy()
+        options['start'] = str(start)
         player_size = Setting.get(SettingProperty.PlayerSize,
                                   default=SettingProperty.PlayerSize_Normal.value)
         if player_size == SettingProperty.PlayerSize_FullScreen.value:
             options['fullscreen'] = 'yes'
-        self.send_command(['loadfile', url, 'replace',
-                           ','.join([f'{i}={options[i]}' for i in options])])
+        command = ['loadfile', url, 'replace']
+        if self.mpv_version >= (0, 38):
+            command.append(-1)
+        command.append({key: str(value) for key, value in options.items()})
+        self._load_started = time.monotonic()
+        self.send_command(command)
 
     def set_media_title(self, data):
         """ data : string
@@ -126,6 +172,18 @@ class MPVRenderer(Renderer):
     def set_media_sub_show(self, data: bool):
         self.send_command(['set_property', 'sub-visibility', "yes" if data else "no"])
 
+    def set_media_danmaku_file(self, data):
+        if not self.separate_danmaku:
+            return self.set_media_sub_file(data)
+        self.danmaku_file = data['url']
+        if self._file_loaded:
+            self.send_command(['script-message-to', 'modernz', 'macast-danmaku-file', self.danmaku_file])
+
+    def set_media_danmaku_show(self, data: bool):
+        if not self.separate_danmaku:
+            return self.set_media_sub_show(data)
+        self.send_command(['set_property', 'user-data/macast/danmaku/enabled', bool(data)])
+
     def set_media_text(self, data: str, duration: int = 1000):
         self.send_command(['show-text', data, duration])
 
@@ -139,6 +197,7 @@ class MPVRenderer(Renderer):
     def set_observe(self):
         """Set several property that needed observe
         """
+        self.send_command(['observe_property', ObserveProperty.mpv_version.value, 'mpv-version'])
         self.send_command(
             ['observe_property', ObserveProperty.volume.value, 'volume'])
         self.send_command(
@@ -158,6 +217,8 @@ class MPVRenderer(Renderer):
         self.send_command(
             ['observe_property', ObserveProperty.sub.value,
              'sub-visibility'])
+        self.send_command(['observe_property', ObserveProperty.danmaku.value,
+                           'user-data/macast/danmaku/enabled'])
 
         self.set_media_volume(Setting.get(SettingProperty.PlayerDefaultVolume, 100))
 
@@ -166,7 +227,11 @@ class MPVRenderer(Renderer):
         """
         res = json.loads(res)
         if 'id' in res:
-            if res['id'] == ObserveProperty.volume.value:
+            if res['id'] == ObserveProperty.mpv_version.value:
+                match = re.search(r'(\d+)\.(\d+)', str(res.get('data', '')))
+                if match:
+                    self.mpv_version = tuple(map(int, match.groups()))
+            elif res['id'] == ObserveProperty.volume.value:
                 logger.info(res)
                 if 'data' in res and res['data'] is not None:
                     self.set_state_volume(int(res['data']))
@@ -212,17 +277,30 @@ class MPVRenderer(Renderer):
             elif res['id'] == ObserveProperty.sub.value:
                 data = res.get('data', None)
                 if data is not None:
+                    if not (self.separate_danmaku and getattr(self.protocol, 'supports_danmaku', False)):
+                        self.set_state_subtitle(data)
+            elif res['id'] == ObserveProperty.danmaku.value:
+                data = res.get('data')
+                if isinstance(data, bool) and self.separate_danmaku and getattr(self.protocol, 'supports_danmaku', False):
                     self.set_state_subtitle(data)
         elif 'event' in res:
             logger.info(res)
+            if (getattr(self, '_load_started', None) is not None and
+                    res['event'] in ('start-file', 'file-loaded', 'playback-restart')):
+                latency_logger.info('mpv_event=%s load_elapsed_ms=%.1f', res['event'],
+                                    (time.monotonic() - self._load_started) * 1000)
+                if res['event'] == 'playback-restart':
+                    self._load_started = None
             if res['event'] == 'end-file':
                 cherrypy.engine.publish('renderer_av_stop')
                 self.playing = False
+                if self._switching_media and res.get('reason') in ('stop', 'eof'):
+                    return
                 if 'reason' not in res:
                     self.set_state_stop()
                 elif res['reason'] == 'error':
                     self.set_state_transport_error()
-                elif res['reason'] == 'eof':
+                elif res['reason'] == 'eof' and not self._switching_media:
                     # NO_MEDIA_PRESENT
                     self.set_state_eof()
                 else:
@@ -235,13 +313,21 @@ class MPVRenderer(Renderer):
                 self.playing = True
                 # self.set_state_transport('TRANSITIONING')
                 cherrypy.engine.publish('renderer_av_uri', self.protocol.get_state_url())
+            elif res['event'] == 'file-loaded':
+                self._file_loaded = True
+                if self.danmaku_file:
+                    self.send_command(['script-message-to', 'modernz', 'macast-danmaku-file', self.danmaku_file])
+                if self._switching_media:
+                    self._switching_media = False
+                    self.send_command(['set_property', 'force-window', 'no'])
             elif res['event'] == 'seek':
                 pass
                 # self.set_state_transport('TRANSITIONING')
             elif res['event'] == 'idle':
                 # video comes to end
                 self.playing = False
-                self.set_state_stop()
+                if not self._switching_media:
+                    self.set_state_stop()
             elif res['event'] == 'playback-restart':
                 # video is ready to play
                 if self.pause:
@@ -278,8 +364,7 @@ class MPVRenderer(Renderer):
         self.ipc_running = True
         while self.ipc_running and self.running and self.mpv_thread.is_alive():
             try:
-                time.sleep(0.5)
-                logger.error("mpv ipc socket start connect")
+                logger.debug("mpv ipc socket start connect")
                 if os.name == 'nt':
                     handler = _winapi.CreateFile(
                         self.mpv_sock,
@@ -291,12 +376,15 @@ class MPVRenderer(Renderer):
                     self.ipc_sock = socket.socket(socket.AF_UNIX,
                                                   socket.SOCK_STREAM)
                     self.ipc_sock.connect(self.mpv_sock)
-                cherrypy.engine.publish('mpvipc_start')
-                cherrypy.engine.publish('renderer_start')
                 self.ipc_once_connected = True
                 self.set_observe()
+                cherrypy.engine.publish('mpvipc_start')
+                cherrypy.engine.publish('renderer_start')
             except Exception as e:
-                logger.error("mpv ipc socket reconnecting: {}".format(str(e)))
+                logger.debug("mpv ipc socket reconnecting: {}".format(str(e)))
+                if self.ipc_sock is not None:
+                    self.ipc_sock.close()
+                self._stop_event.wait(0.05)
                 continue
             res = b''
             msgs = None
@@ -309,27 +397,38 @@ class MPVRenderer(Renderer):
                     if data == b'':
                         break
                     res += data
-                    if data[-1] != 10:
-                        continue
                 except Exception as e:
                     logger.debug(e)
                     break
-                try:
-                    msgs = res.decode().strip().split('\n')
-                    for msg in msgs:
+                # Process complete events immediately even if the same read
+                # ends with the beginning of another JSON message.
+                while b'\n' in res:
+                    msg, res = res.split(b'\n', 1)
+                    if not msg.strip():
+                        continue
+                    try:
                         self.update_state(msg)
-                except Exception as e:
-                    logger.error("decode error: {}".format(e))
-                    logger.error(f"decode error data: {msg}")
-                    logger.error(f"decode error data list: {msgs}")
-                finally:
-                    res = b''
+                    except Exception as e:
+                        logger.error("decode error: {}".format(e))
             self.ipc_sock.close()
-            logger.error("mpv ipc stopped")
+            logger.info("mpv ipc stopped")
 
     def start_mpv(self):
         """Start mpv thread
         """
+        # Determine the loadfile API before the IPC start/reload hooks run.
+        try:
+            # Finder-launched apps may use an ASCII locale; mpv's version
+            # output contains non-ASCII copyright text on macOS.
+            result = subprocess.run([self.path, '--no-config', '--version'], capture_output=True,
+                                    text=True, encoding='utf-8', errors='replace',
+                                    timeout=10, env=Setting.get_system_env(),
+                                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+            match = re.search(r'mpv\s+(\d+)\.(\d+)', result.stdout)
+            if match:
+                self.mpv_version = tuple(map(int, match.groups()))
+        except (OSError, subprocess.SubprocessError):
+            logger.warning('Could not detect mpv version; waiting for IPC version property')
         error_time = 3
         while self.running and error_time > 0:
             self.set_state_speed('1')
@@ -340,13 +439,17 @@ class MPVRenderer(Renderer):
                 '--image-display-duration=inf',
                 '--idle=yes',
                 '--no-terminal',
-                '--on-all-workspaces',
-                '--hwdec=yes',
-                '--save-position-on-quit=yes',
-                '--script-opts=osc-timetotal=yes,osc-layout=bottombar,' +
-                'osc-title=${title},osc-showwindowed=yes,' +
-                'osc-seekbarstyle=bar,osc-visibility=auto'
+                '--no-config',
+                '--load-scripts=no',
+                '--ytdl=no',
+                '--hwdec=auto',
+                '--save-position-on-quit=no',
+                '--demuxer-max-bytes=32MiB',
+                '--demuxer-max-back-bytes=8MiB',
             ]
+            if sys.platform == 'win32':
+                params += ['--vo=gpu', '--gpu-api=d3d11']
+            params += player_ui_options(Setting.get(SettingProperty.PlayerUIScale, 1.0))
 
             ontop = Setting.get(SettingProperty.PlayerOntop,
                                 default=SettingProperty.PlayerOntop_True.value)
@@ -393,8 +496,9 @@ class MPVRenderer(Renderer):
             hw = Setting.get(SettingProperty.PlayerHW,
                              default=SettingProperty.PlayerHW_Enable.value)
             if hw == SettingProperty.PlayerHW_Disable.value:
-                params.remove('--hwdec=yes')
-            elif hw == SettingProperty.PlayerHW_Force.value:
+                params.remove('--hwdec=auto')
+                params.append('--hwdec=no')
+            elif hw == SettingProperty.PlayerHW_Force.value and sys.platform == 'darwin':
                 params.append('--macos-force-dedicated-gpu=yes')
 
             # start mpv
@@ -405,17 +509,24 @@ class MPVRenderer(Renderer):
                     params,
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.PIPE,
-                    stdin=subprocess.PIPE,
-                    env=Setting.get_system_env())
-                self.proc.communicate()
+                    stdin=subprocess.DEVNULL,
+                    env=Setting.get_system_env(),
+                    creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+                # Drain stderr continuously; communicate() retains an unbounded
+                # buffer for this long-lived player and can hide startup errors.
+                for line in self.proc.stderr:
+                    logger.warning('mpv: %s', line.decode('utf-8', errors='replace').rstrip())
+                self.proc.wait()
             except Exception as e:
                 logger.error(e)
             logger.info("mpv stopped")
             if self.running and not self.ipc_once_connected:
                 # There should be a problem with the MPV startup parameters
-                time.sleep(1)
+                self._stop_event.wait(0.25)
                 error_time -= 1
                 logger.error("mpv restarting")
+            elif self.running:
+                self._stop_event.wait(0.1)
         if error_time <= 0:
             # some thing wrong with mpv
             cherrypy.engine.publish("app_notify", "Macast", "MPV Can't start")
@@ -426,6 +537,8 @@ class MPVRenderer(Renderer):
         """Start mpv and mpv ipc
         """
         super(MPVRenderer, self).start()
+        self._stop_event.clear()
+        self.ipc_once_connected = False
         logger.info("starting mpv and mpv ipc")
         self.mpv_thread = threading.Thread(target=self.start_mpv, name="MPV_THREAD")
         self.mpv_thread.start()
@@ -438,17 +551,26 @@ class MPVRenderer(Renderer):
         super(MPVRenderer, self).stop()
         logger.info("stoping mpv and mpv ipc")
         # stop mpv
-        self.send_command(['quit'])
-        if self.proc is not None:
-            self.proc.terminate()
-        try:
-            os.waitpid(-1, 1)
-        except Exception as e:
-            logger.error(e)
-        self.mpv_thread.join()
-        # stop mpv ipc
+        self._stop_event.set()
         self.ipc_running = False
-        self.ipc_thread.join()
+        if self.ipc_sock is not None:
+            self.send_command(['quit'])
+        if self.proc is not None:
+            try:
+                self.proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.proc.terminate()
+                try:
+                    self.proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    self.proc.kill()
+                    self.proc.wait(timeout=2)
+        if self.ipc_sock is not None:
+            self.ipc_sock.close()
+        for thread in (self.mpv_thread, self.ipc_thread):
+            if thread is not None and thread is not threading.current_thread():
+                thread.join(timeout=5)
+        self.ipc_sock = None
 
     def reload(self):
         """Reload MPV
@@ -463,7 +585,7 @@ class MPVRenderer(Renderer):
             if len(protocols) > 0:
                 protocol = protocols.pop()
                 position = protocol.get_state_position()
-                self.send_command(['loadfile', uri, 'replace', f'start={position}'])
+                self.set_media_url_options(uri, position, self.media_options)
             else:
                 self.send_command(['loadfile', uri, 'replace'])
             self.send_command(['set_property', 'title', self.title])
@@ -504,9 +626,11 @@ class SettingProperty(Enum):
     PlayerOntop_True = 1
 
     PlayerDefaultVolume = 500
+    PlayerUIScale = 600
 
 
 class MPVRendererSetting(RendererSetting):
+    _has_dedicated_gpu = None
     def __init__(self):
         self.playerPositionItem = None
         self.playerSizeItem = None
@@ -539,10 +663,17 @@ class MPVRendererSetting(RendererSetting):
                                            _("Fullscreen")
                                        ], self.on_renderer_size_clicked))
         self.playerOntopItem = MenuItem(_("Player Ontop"), self.on_renderer_ontop_clicked)
+        self.playerUIScaleItem = MenuItem('Player UI Size', children=App.build_menu_item_group(
+            ['Automatic (DPI)', 'Automatic + 25%', 'Automatic + 50%'],
+            self.on_renderer_ui_scale_clicked))
+        current_scale = Setting.get(SettingProperty.PlayerUIScale, 1.0)
+        for item, scale in zip(self.playerUIScaleItem.items(), [1.0, 1.25, 1.5]):
+            item.checked = current_scale == scale
 
-        has_dedicated_gpu = False
+        has_dedicated_gpu = self._has_dedicated_gpu or False
         # Force dedicated GPU only works on MacOS
-        if sys.platform == 'darwin':
+        if (sys.platform == 'darwin' and platform.machine() != 'arm64' and
+                self._has_dedicated_gpu is None):
             try:
                 res, gpu_info = Setting.system_shell(
                     ['system_profiler', '-json', '-timeout', '10', 'SPDisplaysDataType'])
@@ -554,6 +685,7 @@ class MPVRendererSetting(RendererSetting):
                         logger.error('GPU:' + gpu['sppci_model'])
             except Exception as e:
                 logger.error("Error get gpu info")
+            type(self)._has_dedicated_gpu = has_dedicated_gpu
 
         if has_dedicated_gpu:
             self.playerHWItem = MenuItem(_("Hardware Decode"),
@@ -570,7 +702,7 @@ class MPVRendererSetting(RendererSetting):
         else:
             self.playerHWItem = MenuItem(_("Hardware Decode"),
                                          self.on_renderer_hw_toggled)
-            if self.setting_player_hw != SettingProperty.PlayerHW_Disable:
+            if self.setting_player_hw != SettingProperty.PlayerHW_Disable.value:
                 self.playerHWItem.checked = True
         self.playerPositionItem.items()[self.setting_player_position].checked = True
         self.playerSizeItem.items()[self.setting_player_size].checked = True
@@ -580,6 +712,7 @@ class MPVRendererSetting(RendererSetting):
             MenuItem(_("Player Settings"), enabled=False),
             self.playerPositionItem,
             self.playerSizeItem,
+            self.playerUIScaleItem,
             self.playerHWItem,
             self.playerOntopItem,
         ]
@@ -590,6 +723,16 @@ class MPVRendererSetting(RendererSetting):
                                 _("please wait"),
                                 sound=False)
         cherrypy.engine.publish('reload_renderer')
+
+    def on_renderer_ui_scale_clicked(self, item):
+        scale = [1.0, 1.25, 1.5][item.data]
+        Setting.set(SettingProperty.PlayerUIScale, scale)
+        for child in self.playerUIScaleItem.items():
+            child.checked = child.data == item.data
+        for renderer in cherrypy.engine.publish('get_renderer'):
+            send = getattr(renderer, 'send_command', None)
+            if callable(send):
+                send(['script-message-to', 'modernz', 'macast-ui-scale', str(scale)])
 
     def on_renderer_ontop_clicked(self, item):
         item.checked = not item.checked

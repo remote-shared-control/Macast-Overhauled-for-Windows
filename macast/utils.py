@@ -13,24 +13,25 @@ import locale
 import cherrypy
 import subprocess
 from enum import Enum
-import netifaces as ni
+if sys.platform != 'win32':
+    import netifaces as ni
 
 if sys.platform == 'darwin':
     from AppKit import NSBundle
 elif sys.platform == 'win32':
-    import win32api
-    import win32con
+    import winreg
 
 logger = logging.getLogger("Utils")
 DEFAULT_PORT = 0
-SETTING_DIR = appdirs.user_config_dir('Macast', 'xfangfang')
+SETTING_DIR = os.environ.get('MACAST_CONFIG_DIR') or (
+    os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'Macast-Overhauled')
+    if sys.platform == 'win32' else appdirs.user_config_dir('Macast', 'xfangfang'))
 PROTOCOL_DIR = 'protocol'
 RENDERER_DIR = 'renderer'
 
 
 class SettingProperty(Enum):
     USN = 0
-    CheckUpdate = 1
     StartAtLogin = 2
     MenubarIcon = 3
     ApplicationPort = 4
@@ -57,7 +58,7 @@ class Setting:
         """
         if not os.path.exists(SETTING_DIR):
             os.makedirs(SETTING_DIR)
-        with open(Setting.setting_path, "w") as f:
+        with open(Setting.setting_path, "w", encoding='utf-8') as f:
             json.dump(obj=Setting.setting, fp=f, sort_keys=True, indent=4)
 
     @staticmethod
@@ -76,8 +77,15 @@ class Setting:
                 Setting.setting = {}
             else:
                 try:
-                    with open(Setting.setting_path, "r") as f:
+                    with open(Setting.setting_path, "r", encoding='utf-8') as f:
                         Setting.setting = json.load(fp=f)
+                    # Retire the old upstream update-check preference. It is no
+                    # longer a setting in this distribution or its settings page.
+                    if Setting.setting.pop('CheckUpdate', None) is not None:
+                        try:
+                            Setting.save()
+                        except OSError as error:
+                            logger.warning('Could not remove obsolete update preference: %s', error)
                     logger.error(Setting.setting)
                 except Exception as e:
                     logger.error(e)
@@ -142,6 +150,12 @@ class Setting:
 
     @staticmethod
     def get_ip():
+        if sys.platform == 'win32':
+            from .windows import interface_addresses
+            Setting.last_ip = interface_addresses(
+                Setting.get(SettingProperty.Blocked_Interfaces, []),
+                Setting.get(SettingProperty.Additional_Interfaces, []))
+            return Setting.last_ip
         last_ip = []
         gateways = ni.gateways()  # {type: [{ip, interface, default},{},...], type: []}
         interfaces = set(Setting.get(SettingProperty.Additional_Interfaces, []))
@@ -215,8 +229,9 @@ class Setting:
 
     @staticmethod
     def system_shell(shell):
-        result = subprocess.run(shell, stdout=subprocess.PIPE)
-        return result.returncode, result.stdout.decode('UTF-8').strip()
+        result = subprocess.run(shell, stdout=subprocess.PIPE,
+                                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+        return result.returncode, result.stdout.decode('UTF-8', errors='replace').strip()
 
     @staticmethod
     def set_start_at_login(launch):
@@ -260,27 +275,21 @@ class Setting:
             if "python" in os.path.basename(sys.executable).lower():
                 return (1, "Not support to set start at login.")
 
-            key = win32api.RegOpenKey(win32con.HKEY_CURRENT_USER,
-                                      r'Software\Microsoft\Windows\CurrentVersion\Run',
-                                      0,
-                                      win32con.KEY_SET_VALUE)
-            logger.info(sys.executable)
-            if launch:
-                try:
-                    win32api.RegSetValueEx(key, 'Macast', 0, win32con.REG_SZ, sys.executable)
-                    win32api.RegCloseKey(key)
-                except Exception as e:
-                    logger.error(e)
-                    # cherrypy.engine.publish("app_notify", "ERROR", f"{e}")
-                return 0, 1
-            else:
-                try:
-                    win32api.RegDeleteValue(key, 'Macast')
-                    win32api.RegCloseKey(key)
-                except Exception as e:
-                    logger.error(e)
-                    # cherrypy.engine.publish("app_notify", "ERROR", f"{e}")
-                return 0, 1
+            try:
+                with winreg.CreateKeyEx(winreg.HKEY_CURRENT_USER,
+                        r'Software\Microsoft\Windows\CurrentVersion\Run',
+                        0, winreg.KEY_SET_VALUE) as key:
+                    if launch:
+                        winreg.SetValueEx(key, 'Macast-Overhauled', 0, winreg.REG_SZ,
+                                          subprocess.list2cmdline([sys.executable]))
+                    else:
+                        try:
+                            winreg.DeleteValue(key, 'Macast-Overhauled')
+                        except FileNotFoundError:
+                            pass
+                return 0, ''
+            except OSError as error:
+                return 1, str(error)
         else:
             return (1, 'Not support current platform.')
 
@@ -294,7 +303,7 @@ class Setting:
         if Setting.base_path is not None:
             return os.path.join(Setting.base_path, path)
         if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-            Setting.base_path = sys._MEIPASS
+            Setting.base_path = os.path.join(sys._MEIPASS, 'macast')
         else:
             Setting.base_path = os.path.join(os.path.dirname(__file__), '.')
         return os.path.join(Setting.base_path, path)
@@ -310,7 +319,6 @@ class Setting:
         # Get system env(for GNU/Linux and *BSD).
         # https://pyinstaller.readthedocs.io/en/stable/runtime-information.html#run-time-information
         env = dict(os.environ)
-        logger.debug(env)
         lp_key = 'LD_LIBRARY_PATH'
         lp_orig = env.get(lp_key + '_ORIG')
         if lp_orig is not None:
@@ -428,3 +436,5 @@ def cherrypy_publish(method, default=None):
     if len(res) > 0:
         return res.pop()
     return default
+
+

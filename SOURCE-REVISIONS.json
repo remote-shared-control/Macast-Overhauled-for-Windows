@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-31",
+  "validation": "Windows 11 build 26200 / CPython 3.12.14 x64; see VALIDATION.md. Windows 10 and phone validation pending.",
+  "repositories": {
+    "Macast": {
+      "upstream": "https://github.com/xfangfang/Macast.git",
+      "base_commit": "121add3a8a70edb77e33aeab1ec88aeff27f49fc"
+    },
+    "Macast-plugins": {
+      "upstream": "https://github.com/xfangfang/Macast-plugins.git",
+      "base_commit": "e4a18457aa7addd3a46041420d277343b66647ee"
+    }
+  },
+  "windows_port": {
+    "version": "0.8.1",
+    "basis": "Local Macast-Overhauled-main macOS fork, retaining original Macast and ModernZ provenance",
+    "mpv": "20261021 / e471496c56 (baseline x64)"
+  }
+}

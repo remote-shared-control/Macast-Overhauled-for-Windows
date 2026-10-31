@@ -31,7 +31,9 @@ MANIFEST
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
+!packaging/windows.manifest
 *.spec
+!Macast-Windows.spec
 
 # Installer logs
 pip-log.txt
@@ -130,3 +132,32 @@ dmypy.json
 
 bin
 mpv-latest.tar.gz
+
+# Local release build artifacts
+Macast-MacOS-v*.dmg
+installation-backup-*/
+build-before-*/
+dist-before-*/
+release-backups/
+diagnostics/
+Macast-Overhauled-Windows-v*.zip
+Macast-Windows-Source-v*.zip
+
+# Legacy platform references retained only in the local workspace
+/setup_py2app.py
+/Dockerfile
+/requirements/darwin.txt
+/build-requirements.lock.txt
+/tools/build_macos.sh
+/tools/normalize_rpaths.py
+/tools/prepare_distribution.py
+/docs/macOS-27-ZH.md
+/.github/workflows/build-macast.yaml
+/.github/workflows/release-macos.yml
+/licenses/native-supplement/
+/Macast-plugins/potplayer/
+/Macast-plugins/iina/
+/Macast-plugins/bolan-iina/
+/Macast-plugins/pi-fm-rds/
+/Macast-plugins/web/
+/Macast-plugins/live/

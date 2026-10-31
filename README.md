@@ -1,93 +1,160 @@
-<img align="center" src="macast_slogan.png" alt="slogan" height="auto"/>
+# Macast-Overhauled · Plugin-integrated edition for Windows
 
-# Macast
+[简体中文](README_ZH.md) | [Build guide](BUILDING.md) | [Open-source licenses](THIRD_PARTY_NOTICES.md)
 
-[![visitor](https://visitor-badge.glitch.me/badge?page_id=xfangfang.Macast)](https://github.com/xfangfang/Macast/releases/latest)
-![stars](https://img.shields.io/badge/dynamic/json?label=github%20stars&query=stargazers_count&url=https%3A%2F%2Fapi.github.com%2Frepos%2Fxfangfang%2FMacast)
-[![downloads](https://img.shields.io/github/downloads/xfangfang/Macast/total?color=blue)](https://github.com/xfangfang/Macast/releases/latest)
-[![plugins](https://shields-staging.herokuapp.com/github/directory-file-count/xfangfang/Macast-plugins?type=dir&label=plugins)](https://github.com/xfangfang/Macast-plugins)
-[![pypi](https://img.shields.io/pypi/v/macast)](https://pypi.org/project/macast/)
-[![aur](https://img.shields.io/aur/version/macast-git?color=yellowgreen)](https://aur.archlinux.org/packages/macast-git/)
-[![build](https://img.shields.io/github/workflow/status/xfangfang/Macast/Build%20Macast)](https://github.com/xfangfang/Macast/actions/workflows/build-macast.yaml)
-[![mac](https://img.shields.io/badge/MacOS-10.14%20and%20higher-lightgrey?logo=Apple)](https://github.com/xfangfang/Macast/releases/latest)
-[![windows](https://img.shields.io/badge/Windows-7%20and%20higher-lightgrey?logo=Windows)](https://github.com/xfangfang/Macast/releases/latest)
-[![linux](https://img.shields.io/badge/Linux-Xorg-lightgrey?logo=Linux)](https://github.com/xfangfang/Macast/releases/latest)
+Want to watch a video from your phone on your Windows PC? Macast sits in the system tray and receives videos, music, and pictures. Music and picture casting use standard DLNA only.
 
+This edition builds on [xfangfang's Macast](https://github.com/xfangfang/Macast), porting the plugin and player changes from [Macast-Overhauled for macOS](https://github.com/frienkie/Macast-Overhauled) to Windows 10 and Windows 11. It brings Bilibili casting, a bundled MPV player, and [ModernZ](https://github.com/Samillion/ModernZ) controls together. Extract the portable package without hunting down a separate player or plugin files.
 
+This derivative is maintained independently. The Windows program is still named **Macast.exe**.
 
-[中文说明](README_ZH.md)
+## Features
 
-A menu bar application using mpv as **DLNA Media Renderer**. You can push videos, pictures or musics from your mobile phone to your computer.
-
+- **Phone casting** through standard DLNA or Bilibili's NVA protocol.
+- **Bundled player** with MPV and runtime dependencies; no separate player or Python installation is required.
+- **Quality selection** from the casting client using available DASH video tracks and matching audio.
+- **Independent danmaku controls** for comments and ordinary subtitles, synchronized with the phone's danmaku switch.
+- **Automatic UI scaling** for monitor DPI, window size, and fullscreen mode, with additional size presets.
+- **Lightweight ModernZ interface** with blue accents and no extra thumbnail processes, video filters, or image enhancement passes.
+- **Automatic plugin installation** for the bundled NVA plugin. Customized copies stay in place when you install a newer build.
 
 ## Installation
 
-- ### MacOS || Windows || Debian
+### Requirements
 
-  Download link:  [Macast release latest](https://github.com/xfangfang/Macast/releases/latest)
+- Windows 10 22H2 or Windows 11, Intel / AMD **x64 (64-bit)**.
+- The current package uses a baseline x86-64 MPV build. No 32-bit or native ARM64 package is provided.
+- Phone and PC on the same local network, with communication between devices allowed.
 
-- ### Package manager
+### Steps
 
-  ```shell
-  pip install macast
-  macast-gui # or macast-cli
-  ```
+1. Download [**Macast-Overhauled-Windows-v0.8.1-x64.zip**](https://github.com/remote-shared-control/Macast-Overhauled-for-Windows/releases/latest/download/Macast-Overhauled-Windows-v0.8.1-x64.zip) from Releases.
+2. Extract the **entire folder** from the ZIP to a fixed location on your PC.
+3. Open **Macast.exe**. Its icon appears in the system tray.
+4. If Windows Firewall prompts, allow Macast to receive connections on your own private network.
 
-  Please see our wiki for more information(like **aur** support): [#package-manager](https://github.com/xfangfang/Macast/wiki/Installation#package-manager)  
-  Linux users may have problems installing using pip. Two additional libraries that I have modified need to be installed:
+Keep **_internal** beside **Macast.exe**; copying the EXE alone is insufficient. Paths containing Chinese characters or spaces are supported. The current portable build is not code-signed.
 
-  ```shell
-  pip install git+https://github.com/xfangfang/pystray.git
-  pip install git+https://github.com/xfangfang/pyperclip.git
-  ```
+### Getting a newer build
 
-  **See [this](https://github.com/xfangfang/Macast/wiki/Installation#linux) for Linux compatibility**
-
-- ### Build from source
-
-  Please refer to: [Macast Development](docs/Development.md)
-
+This edition does not check for Macast updates online or show upstream version prompts. To upgrade, quit Macast, download a newer ZIP from this project, extract its complete folder, and start the new version. Bundled plugins that you have not changed update on the next launch; your own edits stay in place.
 
 ## Usage
 
-- **For ordinary users**  
-After opening this app, a small icon will appear in the **menubar** / **taskbar** / **desktop panel**, then you can push your media files from a local DLNA client to your computer.
+### Bilibili casting
 
-- **For advanced users**  
-  1. By loading the [Macast-plugins](https://github.com/xfangfang/Macast-plugins), Macast can support third-party players like IINA and PotPlayer.  
-  For more information, see: [#how-to-use-third-party-player-plug-in](https://github.com/xfangfang/Macast/wiki/FAQ#how-to-use-third-party-player-plug-in)
-  2. You can modify the shortcut keys or configuration of the default mpv player by yourself, see: [#how-to-set-personal-configurations-to-mpv](https://github.com/xfangfang/Macast/wiki/FAQ#how-to-set-personal-configurations-to-mpv)
+1. Right-click Macast's tray icon and confirm **NVA Protocol** and **MPV Renderer** in settings; these are the first-launch defaults.
+2. Open a video in the phone's Bilibili client and tap its cast button.
+3. Select **我的小电视** in the device list.
+4. Control playback, seeking, and available quality levels from the phone or use the PC player's controls.
 
-- **For developer**  
-You can use a few lines of code to add support for other players like IINA and PotPlayer or even add additional features, like downloading media files while playing videos.  
-Tutorials and examples are shown in: [Macast/wiki/Custom-Renderer](https://github.com/xfangfang/Macast/wiki/Custom-Renderer).  
-Fell free to submit a pull request to [Macast-plugins](https://github.com/xfangfang/Macast-plugins).  
+Available quality levels depend on the video, server response, and account permissions. The application cannot unlock unavailable resolutions.
 
+### Standard DLNA casting
+
+Select **DLNA Protocol** in Macast, then discover and select the receiver from a DLNA-compatible phone application. The advertised device name follows your Macast settings. NVA also extends DLNA; select plain DLNA if a client needs it for compatibility.
+
+### Player controls
+
+Settings and player controls use English. Media titles, subtitle text, and danmaku keep their original language. Move the pointer toward the bottom of the player to reveal its controls.
+
+| Control | Function |
+| --- | --- |
+| Play / Pause | Control the current video |
+| Timeline | Seek to a playback position |
+| Volume | Adjust volume or mute |
+| **Subtitles** icon | Select an ordinary subtitle track, or **Off** |
+| **Danmaku** speech bubble | Toggle comments independently; shown when danmaku is available |
+| Fullscreen | Enter or leave fullscreen |
+
+Subtitles and danmaku have independent switches. Turning subtitles off leaves danmaku available, and the phone's danmaku switch stays synchronized. The subtitle button may be unavailable if the video provides no ordinary captions. Normal subtitles move above the visible controls while danmaku keeps its independent position.
+
+### Large and high-DPI displays
+
+Open **Player UI Size** in Macast settings:
+
+| Option | Effect |
+| --- | --- |
+| **Automatic (DPI)** | Scale with monitor DPI, window size, and fullscreen mode |
+| **Automatic + 25%** | Enlarge the automatic size by 25% |
+| **Automatic + 50%** | Enlarge the automatic size by 50% |
+
+Changes apply immediately without restarting the player.
+
+## Plugins and bundled player
+
+The NVA plugin installs into the current user's configuration directory on first launch. Upgrades update managed, unmodified copies and back up replaced files; customized versions are preserved.
+
+| Component | Purpose |
+| --- | --- |
+| Nirvana / NVA Protocol | Bilibili casting; source in [Macast-plugins/nirvana](Macast-plugins/nirvana/) |
+| DLNA Protocol | Built-in standard DLNA protocol |
+| MPV Renderer | The sole bundled player, with ModernZ and independent subtitle/danmaku controls |
+
+The Windows edition uses only the bundled MPV and does not include PotPlayer or other external player integrations. D3D11 output and automatic hardware decoding are enabled by default. Disable **Hardware Decode** in settings when troubleshooting GPU drivers.
 
 ## FAQ
-If you have any questions about this application, please check: [Macast/wiki/FAQ](https://github.com/xfangfang/Macast/wiki/FAQ).  
-If this does not solve your problem, please open a new issue to notify us, we are willing to help you solve the problem.
 
-## Screenshots
+### Phone cannot find the receiver?
 
-You can copy the video link after the video is casted：  
-<img align="center" width="400" src="https://github.com/xfangfang/xfangfang.github.io/raw/master/assets/img/macast/copy_uri.png" alt="copy_uri" height="auto"/>
+Check that both devices share the same network and Windows Firewall allows incoming Macast connections on your private network. Guest networks, wireless client isolation, and some VPNs can prevent discovery. Bilibili casting also requires **NVA Protocol**.
 
-Or select a third-party player plug-in  
-<img align="center" width="400" src="https://github.com/xfangfang/xfangfang.github.io/raw/master/assets/img/macast/select_renderer.png" alt="select_renderer" height="auto"/>
+### Selected a device, but no player opened?
 
-## Relevant links
+Check that **MPV Renderer** is selected and the portable package's **_internal** folder has not been moved or removed. Select the video again and inspect `application.log` through **Open Config Directory**.
 
-[UPnP™ Device Architecture 1.1](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf)
+### Why is 1080P unavailable?
 
-[UPnP™ Resources](http://upnp.org/resources/upnpresources.zip)
+First check that the video and account have access to that quality on the phone. The server response determines available tracks. Network errors, expired media URLs, or client protocol changes can also affect playback.
 
-[UPnP™ ContentDirectory:1 service](http://upnp.org/specs/av/UPnP-av-ContentDirectory-v1-Service.pdf)
+### Why does switching videos take a moment?
 
-[UPnP™ MediaRenderer:1 device](http://upnp.org/specs/av/UPnP-av-MediaRenderer-v1-Device.pdf)
+The player clears the previous frame and loads the new video. Quality and URL requests, transfer, decoder preparation, and buffering still take time. For unusually long delays, inspect stage timings in `latency.log` in the configuration directory.
 
-[UPnP™ AVTransport:1 service](http://upnp.org/specs/av/UPnP-av-AVTransport-v1-Service.pdf)
+### Configuration and issue reports
 
-[UPnP™ RenderingControl:1 service](http://upnp.org/specs/av/UPnP-av-RenderingControl-v1-Service.pdf)
+Choose **Open Config Directory** to open:
 
-[python-upnp-ssdp-example](https://github.com/ZeWaren/python-upnp-ssdp-example)
+```text
+%LOCALAPPDATA%\Macast-Overhauled
+```
+
+The `protocol/` folder contains the NVA plugin; `bundled-plugin-backups/` contains upgrade backups. `application.log` and `latency.log` rotate. Optional current-user login startup is available in the tray settings and is disabled by default.
+
+When reporting a problem, include the Windows version, CPU / GPU, selected protocol, phone client version, reproduction steps, and relevant logs. Remove account information, tokens, and complete media URLs before sharing logs. Identify this derivative edition so it can be distinguished from upstream.
+
+## Good to know
+
+- The current package targets Windows 10 22H2 / Windows 11 x64. It has passed 37 regression checks plus local rendering, NVA handshake, and portable-path checks on Windows 11. Windows 10 devices, actual phone casting, other GPUs, and mixed-DPI displays still require device validation.
+- Multi-segment `durl` videos are not supported. DRM, special audio tracks, and some client protocol combinations may not play.
+- Client or service API changes may affect casting. The media service controls account and content access.
+
+## Build from source
+
+See [BUILDING.md](BUILDING.md). Keep the included `Macast-plugins/` directory and build on Windows x64 with Python 3.12. The portable package includes bilingual documentation, license records, and a `Documentation/Macast-Windows-Source-v0.8.1.zip` snapshot of the modified application and plugins.
+
+The folder-based build avoids per-launch extraction. Forward and backward media caches are capped at 32 MiB and 8 MiB. The player's global user configuration is not loaded. See [VALIDATION.md](VALIDATION.md) for diagnostic commands and validation scope.
+
+## Open-source projects and acknowledgements
+
+This edition uses or derives from the following projects. Original authorship and licenses are retained.
+
+| Project | Role | License |
+| --- | --- | --- |
+| [Macast — xfangfang](https://github.com/xfangfang/Macast) | Tray app, DLNA, and player framework; the base of this project | [GPL v3](LICENSE) |
+| [Macast-Overhauled](https://github.com/frienkie/Macast-Overhauled) | macOS plugin/player changes used as the Windows port's basis | Original component licenses |
+| [Macast-plugins — xfangfang and contributors](https://github.com/xfangfang/Macast-plugins) | NVA plugin foundation | [MIT](Macast-plugins/LICENSE) |
+| [mpv](https://github.com/mpv-player/mpv) | Bundled video player | GPL/LGPL according to build configuration; see packaged notices |
+| [ModernZ — Samillion](https://github.com/Samillion/ModernZ) | Player controls, extended with DPI scaling and independent danmaku controls | [LGPL v2.1](mpv_ui/LICENSE.ModernZ) |
+| [FFmpeg](https://ffmpeg.org/) / [libass](https://github.com/libass/libass) | Media processing and ASS subtitle/danmaku rendering | FFmpeg: GPL/LGPL according to configuration; libass: ISC |
+| [Fluent System Icons — Microsoft](https://github.com/microsoft/fluentui-system-icons) | Icon source for ModernZ | MIT |
+| [Material Symbols — Google](https://github.com/google/material-design-icons) | Icon source for ModernZ | Apache 2.0 |
+| [Vue](https://github.com/vuejs/vue) / [Element UI](https://github.com/ElemeFE/element) / [Vue Resource](https://github.com/pagekit/vue-resource) | Advanced settings page, components, English locale, and requests | MIT |
+| [Python](https://www.python.org/) / [PyInstaller](https://pyinstaller.org/) | Runtime and Windows portable packaging | Original licenses and packaging exceptions |
+| [pystray](https://github.com/moses-palmer/pystray) / [Pillow](https://python-pillow.org/) | Windows tray integration and icons | See packaged notices |
+| [CherryPy](https://github.com/cherrypy/cherrypy) / [cheroot](https://github.com/cherrypy/cheroot) | Local HTTP service | See packaged notices |
+| [Requests](https://github.com/psf/requests) / [lxml](https://github.com/lxml/lxml) / [psutil](https://github.com/giampaolo/psutil) / [pyperclip](https://github.com/asweigart/pyperclip) | HTTP, XML, network interface enumeration, and clipboard support | See packaged notices |
+
+ModernZ builds on mpv OSC, maoiscat/mpv-osc-modern, cyl0/ModernX, and dexeonify/ModernX. Full credits are retained in the [original ModernZ documentation](mpv_ui/ModernZ-upstream-README.md).
+
+See [SOURCE-REVISIONS.json](SOURCE-REVISIONS.json) for base application/plugin revisions and [UPSTREAM.json](mpv_ui/UPSTREAM.json) for the pinned ModernZ revision and modifications. Full license and dependency records are indexed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the portable package's `Documentation/licenses/` directory. Each component remains under its own license.

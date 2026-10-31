@@ -14,7 +14,8 @@ LONG_DESCRIPTION = ""
 with open('README.md', 'r', encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 OPTIONS = {}
-INSTALL = ["requests", "appdirs", "cherrypy", "lxml", "netifaces"]
+INSTALL = ["requests", "appdirs", "cherrypy", "lxml"]
+INSTALL += ['psutil'] if sys.platform == 'win32' else ['netifaces']
 PACKAGES = find_packages()
 
 if sys.platform == 'darwin':
@@ -30,7 +31,7 @@ else:
                 "pyperclip @ git+https://github.com/xfangfang/pyperclip.git"]
 
 setup(
-    name="macast",
+    name="macast-overhauled-windows",
     version=VERSION,
     author="xfangfang",
     author_email="xfangfang@126.com",
@@ -42,12 +43,9 @@ setup(
     classifiers=["Topic :: Multimedia :: Sound/Audio",
                  "Topic :: Multimedia :: Video",
                  'Programming Language :: Python :: 3',
-                 'Programming Language :: Python :: 3.6',
-                 'Programming Language :: Python :: 3.7',
-                 'Programming Language :: Python :: 3.8',
-                 'Programming Language :: Python :: 3.9',
+                 'Programming Language :: Python :: 3.12',
                  'Operating System :: MacOS :: MacOS X',
-                 'Operating System :: Microsoft :: Windows :: Windows NT/2000',
+                 'Operating System :: Microsoft :: Windows :: Windows 10',
                  'Operating System :: POSIX',
                  ],
     platforms=["MacOS X", "Windows", "POSIX"],
@@ -62,5 +60,5 @@ setup(
             'macast-gui = macast.macast:gui'
         ]
     },
-    python_requires=">=3.6",
+    python_requires=">=3.12",
 )

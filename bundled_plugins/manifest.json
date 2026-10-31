@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "plugins": [
+    {
+      "path": "protocol/nirvana.py",
+      "title": "NVA Protocol",
+      "version": "0.39",
+      "platform": "darwin,win32,linux",
+      "sha256": "7a97fd1e2ef5e33b453a689cacb9ef9b61e04a6a16b3c7ba6946ffd13e8ee177"
+    }
+  ]
+}

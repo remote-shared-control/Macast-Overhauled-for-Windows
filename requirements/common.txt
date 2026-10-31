@@ -1,8 +1,2 @@
-appdirs
-cherrypy
-lxml
-pillow
-requests
-netifaces
-git+https://github.com/xfangfang/pystray.git
-git+https://github.com/xfangfang/pyperclip.git
+# Windows is the supported build target of this fork.
+-r windows.txt

@@ -95,9 +95,10 @@ class Service:
         self.ssdp_monitor = Monitor(cherrypy.engine, self.notify, 3, name="SSDP_NOTIFY_THREAD")
         self.ssdp_monitor.subscribe()
         cherrypy.config.update({
+            'engine.autoreload.on': False,
             'log.screen': False,
-            'log.access_file': os.path.join(SETTING_DIR, 'macast.log'),
-            'log.error_file': os.path.join(SETTING_DIR, 'macast.log'),
+            'log.access_file': '',
+            'log.error_file': '',
         })
         # cherrypy.engine.autoreload.files.add(Setting.setting_path)
         cherrypy_config = {
@@ -163,14 +164,11 @@ class Service:
         _, port = cherrypy.server.bound_addr
         logger.info("Server current run on port: {}".format(port))
         if port != Setting.get(SettingProperty.ApplicationPort, 0):
-            # todo 验证正确性
-            usn = Setting.get_usn(refresh=True)
-            logger.error("Change usn to: {}".format(usn))
             Setting.set(SettingProperty.ApplicationPort, port)
-            name = "Macast({0:04d})".format(random.randint(0, 9999))
-            logger.error("Change name to: {}".format(name))
-            Setting.set_temp_friendly_name(name)
-            self.protocol.handler.reload()
+            # The handler's reload() replaces the live HTTP server. Doing
+            # that after binding an ephemeral port loses its socket and breaks
+            # NVA requests and shutdown. Only discovery records need refreshing;
+            # keep the receiver identity stable across port changes.
             cherrypy.engine.publish('ssdp_update_ip')
         # service started
         cherrypy.engine.block()

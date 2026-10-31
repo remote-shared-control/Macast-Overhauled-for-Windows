@@ -1,159 +1,160 @@
-<img align="center" src="macast_slogan.png" alt="slogan" height="auto"/>
+# Macast-Overhauled · Windows 插件集成版
 
-# Macast
+[English](README.md) | [构建指南](BUILDING.md) | [开源许可](THIRD_PARTY_NOTICES.md)
 
-[![visitor](https://visitor-badge.glitch.me/badge?page_id=xfangfang.Macast)](https://github.com/xfangfang/Macast/releases/latest)
-[![stars](https://img.shields.io/badge/dynamic/json?label=github%20stars&query=stargazers_count&url=https%3A%2F%2Fapi.github.com%2Frepos%2Fxfangfang%2FMacast)](https://github.com/xfangfang/Macast)
-[![plugins](https://shields-staging.herokuapp.com/github/directory-file-count/xfangfang/Macast-plugins?type=dir&label=plugins)](https://github.com/xfangfang/Macast-plugins)
-[![build](https://img.shields.io/github/workflow/status/xfangfang/Macast/Build%20Macast)](https://github.com/xfangfang/Macast/actions/workflows/build-macast.yaml)
-[![mac](https://img.shields.io/badge/MacOS-10.14%20and%20higher-lightgrey?logo=Apple)](https://github.com/xfangfang/Macast/releases/latest)
-[![windows](https://img.shields.io/badge/Windows-10-lightgrey?logo=Windows)](https://github.com/xfangfang/Macast/releases/latest)
-[![linux](https://img.shields.io/badge/Linux-Xorg-lightgrey?logo=Linux)](https://github.com/xfangfang/Macast/releases/latest)
+想把手机里的视频投到 Windows 电脑上看？Macast 就是一个常驻系统托盘的接收器，视频、音乐和图片都能投。（音乐和图片的投屏实现仅基于标准 DLNA。）
 
-[README_EN](README.md)
+这个版本从 [xfangfang 的 Macast](https://github.com/xfangfang/Macast) 出发，基于 [Macast-Overhauled 的 macOS 插件集成版](https://github.com/frienkie/Macast-Overhauled) 移植到 Windows 10 和 Windows 11。它把哔哩哔哩投屏、内置 MPV 和 [ModernZ](https://github.com/Samillion/ModernZ) 控制界面整合在一起，解压后就能用，不用再手动找播放器和插件。
 
-Macast是一个跨平台的 **菜单栏\状态栏** 应用，用户可以使用电脑接收发送自手机的视频、图片和音乐，支持主流视频音乐软件和其他任何符合DLNA协议的投屏软件。
+这是独立维护的衍生版本。Windows 上的程序仍叫 **Macast.exe**。
 
+## 功能
 
-😂 **请尽量使用英语在Github交流，如果喜欢的话可以点个star关注后续更多协议支持的更新**
-
-
+- **手机投屏**：支持标准 DLNA，以及通过 NVA 协议连接的哔哩哔哩投屏。
+- **内置播放器**：MPV 与运行依赖随便携包提供，无需另外安装播放器或 Python。
+- **清晰度切换**：支持从投屏端切换接口提供的 DASH 清晰度，并匹配音轨。
+- **独立弹幕开关**：播放器中分别控制弹幕和普通字幕，手机弹幕开关同步生效。
+- **自动缩放界面**：控件根据显示器 DPI、窗口大小和全屏状态调整尺寸，也可手动放大。
+- **轻量控制界面**：采用 ModernZ 蓝色主题，不增加缩略图进程、视频滤镜或画质增强处理。
+- **插件自动安装**：NVA 配套插件随程序离线安装。以后升级时，自己改过的插件也会保留。
 
 ## 安装
 
-进入页面选择对应的操作系统下载即可，应用使用方法及截图见下方。
+### 系统要求
 
-- ### MacOS || Windows || Debian
+- Windows 10 22H2 或 Windows 11，Intel / AMD **x64（64 位）**。
+- 当前提供 x64 便携包，使用基础 x86-64 MPV 构建；没有制作 32 位或 ARM64 原生包。
+- 手机与电脑连接同一局域网，且网络允许设备互相访问。
 
-  下载地址1:  [Macast 最新正式版 github下载](https://github.com/xfangfang/Macast/releases/latest)
+### 安装步骤
 
-  下载地址2:  [Macast 最新正式版 gitee下载（上面访问无效可使用此备用链接）](https://gitee.com/xfangfang/Macast/releases/)
+1. 从 [Releases 下载 **Macast-Overhauled-Windows-v0.8.1-x64.zip**](https://github.com/remote-shared-control/Macast-Overhauled-for-Windows/releases/latest/download/Macast-Overhauled-Windows-v0.8.1-x64.zip)。
+2. 将 ZIP 中的**整个文件夹**解压到电脑上的固定位置。
+3. 双击 **Macast.exe**，任务栏通知区域出现图标即表示应用已启动。
+4. 首次使用时，如 Windows 防火墙询问，请允许 Macast 在自己的专用网络中接收连接。
 
-- ### 包管理
-  你也可以使用包管理器安装macast  
-  ```shell
-  # 需要 python>=3.6
-  pip install macast
-  ```
+保持 **Macast.exe** 与 **_internal** 文件夹在一起；只复制 EXE 无法运行。支持中文及带空格的路径。当前便携包未进行 Windows 代码签名。
 
-  请查看我们的wiki页面获取更多的包管理相关信息（如：aur）: [Macast/wiki/Installation#package-manager](https://github.com/xfangfang/Macast/wiki/Installation#package-manager)  
-  Linux用户使用包管理器安装时运行可能会有问题，建议替换如下两个库为我修改过的库（分别负责`菜单显示`与`文本复制`）：
+### 如何获取新版
 
-  ```shell
-  pip install git+https://github.com/xfangfang/pystray.git
-  pip install git+https://github.com/xfangfang/pyperclip.git
-  ```
-
-  **Linux用户如果安装或运行有问题，可以查看 [这里](https://github.com/xfangfang/Macast/wiki/Installation#linux)**
-
-- ### 从源码构建或运行
-
-  构建请参阅: [Macast Development](docs/Development.md) 和 [build-macast.yaml](https://github.com/xfangfang/Macast/blob/main/.github/workflows/build-macast.yaml)
-  
-  运行只需要clone仓库，根据不同的操作系统于requirements文件中安装相关的包，并在项目根目录运行 `Macast.py` 即可。
-
-
+这个版本不会自动联网检查 Macast 的更新，也不会弹出上游版本提示。需要升级时，退出正在运行的 Macast，从本项目获取新的 ZIP 并解压完整文件夹，再启动新版。随程序附带、未经修改的插件会在下次启动时更新；你自己修改的插件会保留。
 
 ## 使用方法
 
-- **普通用户**  
-  1. 打开应用后，**菜单栏 \ 状态栏 \ 任务栏** 会出现一个图标，这时你的设备就可以接收来自同一局域网的DLNA投放了。
+### 哔哩哔哩投屏
 
-- **进阶用户**  
-  1. 通过手动加载 [Macast插件](https://gitee.com/xfangfang/Macast-plugins), Macast可以支持调用其他播放器，如：IINA、PotPlayer等等，或适配国内各家私有的DLNA协议. 
-  2. 在应用内点击高级设置，可以直接在内置的插件商店中快速下载插件（使用github仓库地址，如果网络条件不好刷新不出来，那么还是通过手动加载的方式下载吧）
-  3. 支持修改默认播放器的快捷键或其他参数，见：[#how-to-set-personal-configurations-to-mpv](https://github.com/xfangfang/Macast/wiki/FAQ#how-to-set-personal-configurations-to-mpv)
+1. 右键点击 Macast 托盘图标，在设置中确认选择 **NVA Protocol** 和 **MPV Renderer**（首次启动的默认组合）。
+2. 在手机哔哩哔哩客户端中打开视频，点击投屏按钮。
+3. 从设备列表选择 **我的小电视**。
+4. 使用手机控制播放、暂停、进度与可用清晰度，也可在电脑播放器中操作。
 
-- **程序员**  
-  1. 可以依照教程完成自己的脚本，快速地适配到你喜欢的播放器，或者增加一些新的功能插件，比如：边下边看，自动复制视频链接等等。教程和一些示例代码在：[Macast/wiki/Custom-Renderer](https://github.com/xfangfang/Macast/wiki/Custom-Renderer)  
-  2. 也可以参考 [nirvana](https://github.com/xfangfang/Macast-plugins/tree/main/nirvana) 快速适配第三方魔改的DLNA协议。
+可选清晰度由视频、接口返回结果和账号权限决定；某一清晰度没有出现时，本应用无法额外解锁。
 
-欢迎大家提交代码到[Macast插件](https://github.com/xfangfang/Macast-plugins)。  
-**注意：不要轻易加载非官方仓库下载的插件，这里“插件”本身是可以运行在电脑上的任意代码，不建议加载非官方提供的插件。**
+### 普通 DLNA 投屏
 
+在 Macast 中选择 **DLNA Protocol**，然后在支持 DLNA 的手机应用中搜索并选择 Macast 设备。设备名以 Macast 的当前设置为准。默认的 NVA 协议也继承了 DLNA，遇到客户端兼容问题时可切换到纯 DLNA 协议。
 
-## 开发计划
+### 播放器操作
 
-- [x] 完成第一版应用，支持MacOS
-- [x] 添加对Linux和Windows的支持
-- [x] 完善协议，增强软件适配性
-- [x] 统一MacOS与其他平台的UI
-- [x] 添加多播放器支持
-- [x] 添加多网卡支持
-- [x] 添加自定义端口和自定义播放器名称
-- [ ] 改进目前的播放器控制页面
-- [x] 增加插件商店
-- [x] 添加bilibili弹幕投屏
-- [ ] 支持airplay
+播放器和设置界面使用英语，视频标题、字幕正文和弹幕保留原语言。将鼠标移到播放器下方可显示控制栏。
 
-## 出现问题的可能原因及解决办法（更详细内容见项目的wiki）
+| 控件 | 功能 |
+| --- | --- |
+| 播放 / 暂停按钮 | 控制当前视频 |
+| 进度条 | 跳转播放位置 |
+| 音量按钮 | 调整音量或静音 |
+| **Subtitles** 字幕图标 | 选择普通字幕轨；选择 **Off** 关闭字幕 |
+| **Danmaku** 气泡图标 | 单独开启或关闭弹幕；有弹幕可用时显示 |
+| 全屏按钮 | 切换全屏显示 |
 
-0. 应用闪退  
-    大概率是由windows的hyper-v占用端口号导致的，建议修改hyper-v占用的端口号范围或修改本应用的启动端口号（[Macast配置文件位置](https://github.com/xfangfang/Macast/wiki/FAQ#where-is-the-configuration-file-located)）
-2. 无法搜索到Macast——被电脑防火墙拦截  
-    手机尝试访问 http://电脑ip:1068，如:192.168.1.123:1068 如果出现helloworld 等字样排除问题。  
-    *具体端口号见应用菜单设置的第一项，如果没有则为默认的1068*
-2. 无法搜索到Macast——路由器问题  
-    路由器需要开启UPnP，关闭ap隔离，确认固件正常（部分openwrt有可能有问题）
-4. 无法搜索到Macast——手机软件有问题  
-    可以重启软件或更换软件尝试，或向其他投屏接收端电视测试
-    尝试在搜索页面等待久一点（最多1分钟如果搜不到那应该就是别的问题了）
-    如操作系统为IOS，注意要开启软件的**本地网络发现**权限
-5. 无法搜索到Macast——网络问题  
-    请确定手机和电脑处在同一网段下，比如说：电脑连接光猫的网线，手机连接路由器wifi，这种情况大概率是不在同一网段的，可以查看手机和电脑的ip前缀是否相同。
-6. 无法搜索到Macast——其他未知问题  
-    尝试在同一局域网手机投电视，如果可以正常投说明问题还是出在电脑端，继续检查电脑问题或查看如何报告bug
+弹幕和字幕使用独立开关。关闭字幕不会关闭弹幕；手机上的弹幕开关也会同步到播放器。若视频没有提供普通字幕，字幕按钮可能不可用。普通字幕会避让显示中的底部控制栏，弹幕保持独立位置。
 
-## 对于反馈问题的说明
+### 大屏幕和高 DPI 显示器
 
-  1. 先确保自己有认真读过使用说明
-  2. 在提issue时，请及时地回复作者的消息，太多人提完问题或者反馈就消失，提之前先看别人问过没有，提之后积极参与讨论。如果您做不到回复issue，请不要随便提issue浪费开发者的时间。
-  3. 遇到问题不要只说现象，请附带所有你认为能帮助开发者解决问题的信息，这会让开发者认为你很聪明，且极大的帮助加快解决你的问题与节省开发者的时间。
-  4.  如果你遇到了某个问题，请优先考虑是自己没有看使用说明，比如我遇到过很多很多遭遇了投屏搜索不到的用户，直接评论说，“这个软件用不了”。用不了那是我编出来逗你玩的吗？检查一下自己的防火墙OK？
-  5. 如果你不能自己去写，请不要提出那种很难实现的需求，开发者愿意解决的是：“我有个需求，讨论一下要怎么实现” 而不是 “可以帮我给这个软件加上***功能吗？”
+打开 Macast 设置中的 **Player UI Size**：
 
-## 如何报告bug
-  准备以下信息，推荐到Github报告问题，点击 **[new issue](https://github.com/xfangfang/Macast/issues/new/choose)** 去反馈问题：
-  1. 你的电脑系统类型和版本：如Win10 20h2
-  2. 你使用的手机系统和软件：如 安卓 bilibili
-  3. bug复现：如何复现bug与bug是否可以稳定复现
-  4. 程序运行的log（复现问题时候的log）：  
-    - windows下载debug版应用, 拖入cmd执行，复现问题后，关闭应用，ctrl-a全选复制：[download debug](https://github.com/xfangfang/Macast/releases/latest)  
-    - mac 终端输入：`/Applications/Macast.app/Contents/MacOS/Macast` 回车运行，复现问题后，关闭应用，复制log  
-    - linux 安装deb后，命令行运行 `macast` \\ 或直接从源码运行 \\ 或包管理安装后命令行运行 `macast-cli`，复现问题后，关闭应用，复制log  
+| 选项 | 效果 |
+| --- | --- |
+| **Automatic (DPI)** | 随显示器 DPI、窗口大小和全屏状态自动缩放 |
+| **Automatic + 25%** | 在自动缩放基础上放大 25% |
+| **Automatic + 50%** | 在自动缩放基础上放大 50% |
 
-## 用户反馈
+设置即时生效，无需重启播放器。
 
-点击链接加入群聊【小方的软件工地】：[983730955](https://jq.qq.com/?_wv=1027&k=4ioK8gQs)
+## 插件与内置播放器
 
-当然也可以考虑捐赠 ~~获得贵宾售后服务（开玩笑）~~ 支持Macast和他的开发者们为了这个软件熬过的日日夜夜
+首次启动时，NVA 插件自动安装到当前用户的配置目录。升级后，未经修改的内置插件会自动更新，替换前保留备份；自定义修改不会被覆盖。
 
-<img align="center" width="400" src="sponsorships.png" alt="sponsorships" height="auto"/>
+| 组件 | 用途 |
+| --- | --- |
+| Nirvana / NVA Protocol | 哔哩哔哩投屏协议，源码见 [Macast-plugins/nirvana](Macast-plugins/nirvana/) |
+| DLNA Protocol | 应用内置的标准 DLNA 协议 |
+| MPV Renderer | 唯一随包播放器，配套 ModernZ 界面、独立弹幕和字幕控制 |
 
-<img align="center" width="400" src="https://service-65diwogz-1252652631.bj.apigw.tencentcs.com/release/sponsor.svg" alt="sponsors" height="auto"/>
+Windows 版只使用内置 MPV，不附带 PotPlayer 或其他外部播放器集成。默认使用 Windows D3D11 输出和自动硬解；遇到显卡驱动问题时，可从设置中关闭 **Hardware Decode**。
 
-## 使用截图
-*如果系统设置为中文，Macast会自动切换中文界面*  
+## 常见问题
 
-在投放视频或其他媒体文件后，可以点击应用图标复制媒体下载链接  
-<img align="center" width="400" src="https://gitee.com/xfangfang/xfangfang/raw/master/assets/img/macast/copy_uri.png" alt="copy_uri" height="auto"/>
+### 手机搜不到设备？
 
-支持选择第三方播放器  
-<img align="center" width="400" src="https://gitee.com/xfangfang/xfangfang/raw/master/assets/img/macast/select_renderer.png" alt="select_renderer" height="auto"/>
+确认两台设备处于同一局域网；检查 Windows 网络类型和防火墙是否允许 Macast 在专用网络中接收连接。访客网络、无线客户端隔离和部分 VPN 可能阻止发现设备。B 站投屏还需确认选中了 **NVA Protocol**。
 
+### 选了设备，却没有打开播放器？
 
-## 相关链接
+确认播放器选中 **MPV Renderer**，且没有移动或删除便携包中的 **_internal** 文件夹。重新选择视频发起投屏，并检查 **Open Config Directory** 中的 `application.log`。
 
-[UPnP™ Device Architecture 1.1](http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf)
+### 1080P 怎么选不了？
 
-[UPnP™ Resources](http://upnp.org/resources/upnpresources.zip)
+先确认手机端该视频和账号具备相应清晰度权限。实际可选画质受接口返回结果影响；网络错误、媒体地址失效或客户端协议变化也可能影响播放。
 
-[UPnP™ ContentDirectory:1 service](http://upnp.org/specs/av/UPnP-av-ContentDirectory-v1-Service.pdf)
+### 切换视频为什么要等一会儿？
 
-[UPnP™ MediaRenderer:1 device](http://upnp.org/specs/av/UPnP-av-MediaRenderer-v1-Device.pdf)
+切换时播放器会清除旧画面并加载新视频。清晰度与播放地址获取、网络传输、解码准备和缓冲均需要时间；无法保证零等待。若等待异常，可通过配置目录中的 `latency.log` 查看各阶段耗时。
 
-[UPnP™ AVTransport:1 service](http://upnp.org/specs/av/UPnP-av-AVTransport-v1-Service.pdf)
+### 如何修改配置或反馈问题
 
-[UPnP™ RenderingControl:1 service](http://upnp.org/specs/av/UPnP-av-RenderingControl-v1-Service.pdf)
+菜单 **Open Config Directory** 可打开：
 
-[python-upnp-ssdp-example](https://github.com/ZeWaren/python-upnp-ssdp-example)
+```text
+%LOCALAPPDATA%\Macast-Overhauled
+```
+
+其中 `protocol/` 保存 NVA 插件，`bundled-plugin-backups/` 保存升级备份；`application.log` 和 `latency.log` 滚动保存。可在托盘设置中自行启用当前用户登录启动，默认关闭。
+
+反馈问题时，请提供 Windows 版本、CPU / 显卡、所用协议、手机客户端版本、复现步骤及相关日志。分享日志前移除账号信息、令牌和完整媒体地址。请说明使用的是本衍生版本，便于与上游版本区分。
+
+## 使用前知道这些就好
+
+- 当前包面向 Windows 10 22H2 / Windows 11 x64。已在 Windows 11 上完成 37 项回归测试及本地渲染、NVA 握手和便携路径检查；Windows 10 真机、手机实际投屏及不同显卡 / 多屏 DPI 仍需实机验收。
+- 多段 `durl` 视频暂不支持；DRM、特殊音轨及部分客户端协议组合可能无法播放。
+- 新版客户端或服务接口变化可能影响投屏。账号和内容访问权限由媒体服务决定。
+
+## 从源码构建
+
+参阅 [BUILDING.md](BUILDING.md)。保留 `Macast-plugins/` 插件目录，在 Windows x64 上使用 Python 3.12 构建。便携包中附有双语说明、许可证及 `Documentation/Macast-Windows-Source-v0.8.1.zip` 修改源码快照。
+
+采用目录式便携打包，避免每次启动自解压；媒体缓存上限为前向 32 MiB、后向 8 MiB，不读取用户独立 MPV 的全局配置。诊断和测试范围见 [VALIDATION.md](VALIDATION.md)。
+
+## 开源项目与致谢
+
+本项目使用或衍生自以下开源项目，原作者署名和许可予以保留：
+
+| 项目 | 在本项目中的用途 | 许可 |
+| --- | --- | --- |
+| [Macast — xfangfang](https://github.com/xfangfang/Macast) | 托盘应用、DLNA 与播放器框架，本项目的基础 | [GPL v3](LICENSE) |
+| [Macast-Overhauled](https://github.com/frienkie/Macast-Overhauled) | 本次 Windows 移植所依据的 macOS 插件与播放器修改 | 各组件原有许可 |
+| [Macast-plugins — xfangfang 及贡献者](https://github.com/xfangfang/Macast-plugins) | NVA 协议插件基础 | [MIT](Macast-plugins/LICENSE) |
+| [mpv](https://github.com/mpv-player/mpv) | 内置视频播放器 | 按构建配置适用 GPL/LGPL，见随包原始许可 |
+| [ModernZ — Samillion](https://github.com/Samillion/ModernZ) | 播放器控制界面，本项目增加 DPI 缩放与独立弹幕控制 | [LGPL v2.1](mpv_ui/LICENSE.ModernZ) |
+| [FFmpeg](https://ffmpeg.org/) / [libass](https://github.com/libass/libass) | 媒体处理与 ASS 字幕、弹幕渲染 | FFmpeg 按构建配置适用 GPL/LGPL；libass 为 ISC |
+| [Fluent System Icons — Microsoft](https://github.com/microsoft/fluentui-system-icons) | ModernZ 图标字体来源之一 | MIT |
+| [Material Symbols — Google](https://github.com/google/material-design-icons) | ModernZ 图标字体来源之一 | Apache 2.0 |
+| [Vue](https://github.com/vuejs/vue) / [Element UI](https://github.com/ElemeFE/element) / [Vue Resource](https://github.com/pagekit/vue-resource) | 高级设置页面、组件、英语语言包及请求处理 | MIT |
+| [Python](https://www.python.org/) / [PyInstaller](https://pyinstaller.org/) | 应用运行时与 Windows 便携打包 | 见各项目原始许可与打包例外 |
+| [pystray](https://github.com/moses-palmer/pystray) / [Pillow](https://python-pillow.org/) | Windows 托盘集成与图标 | 见随包原始许可 |
+| [CherryPy](https://github.com/cherrypy/cherrypy) / [cheroot](https://github.com/cherrypy/cheroot) | 本地 HTTP 服务 | 见随包原始许可 |
+| [Requests](https://github.com/psf/requests) / [lxml](https://github.com/lxml/lxml) / [psutil](https://github.com/giampaolo/psutil) / [pyperclip](https://github.com/asweigart/pyperclip) | 网络请求、XML、网卡枚举与剪贴板支持 | 见随包原始许可 |
+
+ModernZ 继承了 mpv OSC、maoiscat/mpv-osc-modern、cyl0/ModernX 和 dexeonify/ModernX 的工作，完整上游致谢见 [ModernZ 原始文档](mpv_ui/ModernZ-upstream-README.md)。
+
+Macast 和插件的基础版本见 [SOURCE-REVISIONS.json](SOURCE-REVISIONS.json)；ModernZ 固定版本与修改记录见 [UPSTREAM.json](mpv_ui/UPSTREAM.json)。完整许可与依赖记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，以及便携包 `Documentation/licenses/` 中的记录。各组件继续遵守各自许可证。

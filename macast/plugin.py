@@ -99,6 +99,10 @@ class ProtocolPlugin(plugins.SimplePlugin):
         self.protocol = protocol
         self.start()
 
+    # Publish the protocol accessor before MPV can emit initial state events.
+    start.priority = 40
+    stop.priority = 60
+
 
 class SSDPPlugin(plugins.SimplePlugin):
     """Run a background SSDP thread
